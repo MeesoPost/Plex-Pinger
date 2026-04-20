@@ -1,7 +1,7 @@
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-#[clap(name = "plex-pinger", about = "Monitors Plex and qBittorrent, sends Pushover alerts on failure")]
+#[clap(name = "plex-pinger", about = "Monitors services and sends Pushover alerts on failure")]
 pub struct Config {
     #[clap(long, default_value = "", help = "Plex identity endpoint, e.g. http://192.168.1.10:32400/identity (empty = disabled)")]
     pub plex_url: String,
