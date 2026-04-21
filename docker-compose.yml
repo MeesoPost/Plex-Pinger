@@ -12,3 +12,4 @@ services:
       - --qbit-url=http://192.168.1.169:8080
       - --nas-url=tcp://192.168.1.139:445
       - --interval-seconds=15
+      # - --isp-ip=84.22.123.45

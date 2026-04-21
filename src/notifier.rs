@@ -15,9 +15,10 @@ pub fn send_pushover(
     token: &str,
     user: &str,
     message: &str,
-) -> Result<(), ureq::Error> {
+) -> Result<(), Box<ureq::Error>> {
     agent
         .post(PUSHOVER_URL)
-        .send_json(PushoverPayload { token, user, message })?;
+        .send_json(PushoverPayload { token, user, message })
+        .map_err(Box::new)?;
     Ok(())
 }

@@ -2,6 +2,7 @@ mod checker;
 mod config;
 mod notifier;
 
+use checker::{Check, CheckResult};
 use clap::Parser;
 use config::Config;
 use std::thread;
@@ -17,7 +18,7 @@ const REALERT_AFTER: &[Duration] = &[
 
 struct Service {
     name: &'static str,
-    url: String,
+    check: Check,
     healthy: bool,
     consecutive_failures: u32,
     down_since: Option<Instant>,
@@ -25,10 +26,10 @@ struct Service {
 }
 
 impl Service {
-    fn new(name: &'static str, url: String) -> Self {
+    fn new(name: &'static str, check: Check) -> Self {
         Self {
             name,
-            url,
+            check,
             healthy: true,
             consecutive_failures: 0,
             down_since: None,
@@ -147,21 +148,49 @@ fn main() {
         let url = url.trim();
         if url.is_empty() {
             println!("  {}: (disabled)", name);
-            None
-        } else {
-            println!("  {}: {}", name, url);
-            Some(Service::new(name, url.to_string()))
+            return None;
+        }
+        match Check::parse_url(url) {
+            Ok(check) => {
+                println!("  {}: {}", name, url);
+                Some(Service::new(name, check))
+            }
+            Err(e) => {
+                eprintln!("  {}: {}", name, e);
+                std::process::exit(1);
+            }
         }
     })
     .collect();
 
+    if let Some(isp_ip) = config.isp_ip {
+        println!("  VPN leak check: alert if current public IP == {}", isp_ip);
+        services.push(Service::new("VPN", Check::VpnLeak(isp_ip)));
+    }
+
     if services.is_empty() {
-        eprintln!("No services configured — pass at least one URL. Exiting.");
+        eprintln!("No services configured — pass at least one URL or --isp-ip. Exiting.");
         std::process::exit(1);
     }
 
     let interval = Duration::from_secs(config.interval_seconds);
     let check_timeout = Duration::from_secs(config.timeout_seconds);
+
+    if let Some(isp_ip) = config.isp_ip {
+        match checker::run(&agent, &Check::VpnLeak(isp_ip), check_timeout) {
+            CheckResult::Down => {
+                eprintln!(
+                    "WARNING: VPN appears OFF at startup — current public IP matches --isp-ip ({}).",
+                    isp_ip
+                );
+                eprintln!("         If ProtonVPN is actually connected, your --isp-ip value is wrong.");
+            }
+            CheckResult::Up => println!("VPN OK at startup — public IP differs from --isp-ip"),
+            CheckResult::Unknown => {
+                eprintln!("note: could not verify VPN state at startup (no IP provider reachable).");
+            }
+        }
+    }
 
     if config.startup_grace_seconds > 0 {
         println!(
@@ -175,16 +204,16 @@ fn main() {
         let cycle_start = Instant::now();
 
         for svc in &mut services {
-            let healthy = checker::check(&agent, &svc.url, check_timeout);
+            let result = checker::run(&agent, &svc.check, check_timeout);
 
-            let message = if healthy {
-                svc.record_success()
-            } else {
-                svc.record_failure(config.failure_threshold)
+            let message = match result {
+                CheckResult::Up => svc.record_success(),
+                CheckResult::Down => svc.record_failure(config.failure_threshold),
+                CheckResult::Unknown => None,
             };
 
             if let Some(msg) = message {
-                if healthy {
+                if result == CheckResult::Up {
                     println!("{}", msg);
                     notify(&agent, &config, &msg, "recovery");
                 } else {

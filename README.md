@@ -34,6 +34,7 @@ All options are CLI flags (see `docker-compose.yml`):
 | `--plex-url` | _(empty)_ | Plex identity endpoint, e.g. `http://10.0.0.5:32400/identity` |
 | `--qbit-url` | _(empty)_ | qBittorrent WebUI, e.g. `http://10.0.0.5:8080` |
 | `--nas-url` | _(empty)_ | NAS, `http://...` or `tcp://host:port` (e.g. `tcp://10.0.0.10:445` for SMB) |
+| `--isp-ip` | _(unset)_ | Your ISP's public IP. When set, alerts if traffic starts leaking outside ProtonVPN (see below) |
 | `--interval-seconds` | `60` | How often to check |
 | `--timeout-seconds` | `5` | HTTP/TCP timeout per check |
 | `--failure-threshold` | `2` | Consecutive failures before alerting (avoids false alarms) |
@@ -47,6 +48,33 @@ Pushover credentials come from env vars (`PUSHOVER_TOKEN`, `PUSHOVER_USER`).
 - 🟢 alert when it's back online (with total downtime)
 - Re-alerts after 1h, 6h, and 24h if something stays down
 - Auto-restart on Docker or host reboot (`restart: unless-stopped`)
+
+## VPN leak detection (optional)
+
+For machines running ProtonVPN natively (e.g. a Windows PC with the ProtonVPN desktop app), plex-pinger can alert you when traffic starts flowing outside the tunnel.
+
+**Setup:**
+
+1. Temporarily disconnect ProtonVPN.
+2. Visit <https://api.ipify.org> and note your ISP's public IPv4.
+3. Reconnect ProtonVPN.
+4. Add the flag to `docker-compose.yml`:
+
+   ```
+   - --isp-ip=84.22.123.45
+   ```
+
+5. Restart: `docker compose up -d`.
+
+**How it works:**
+
+Each cycle plex-pinger queries your current public IP (via `api.ipify.org`, with `icanhazip.com` and `seeip.org` as fallbacks). If the result matches the IP you configured, traffic is no longer routing through ProtonVPN → 🔴 alert.
+
+If all three IP providers are unreachable for a cycle, plex-pinger marks the result as unknown and does not change state — a temporary network blip will not trigger a false "VPN down" alert.
+
+**Startup sanity check:** at launch, plex-pinger does one VPN check and warns if it looks like VPN is already off (i.e. your current IP already matches `--isp-ip`). This catches the "I pasted the wrong IP" mistake before it generates hours of alerts.
+
+**Maintenance:** your ISP's IP changes rarely (typical cable lease: 6+ months). When it does, you'll see constant "VPN is down" alerts — that's the signal to update the flag.
 
 ## Building locally without Docker
 
