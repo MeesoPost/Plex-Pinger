@@ -14,5 +14,5 @@ RUN touch src/main.rs && cargo build --release
 
 # Stage 2: minimal runtime image
 FROM scratch
-COPY --from=builder /build/target/release/plex-pinger /usr/local/bin/plex-pinger
-ENTRYPOINT ["/usr/local/bin/plex-pinger"]
+COPY --from=builder /build/target/release/oko /usr/local/bin/oko
+ENTRYPOINT ["/usr/local/bin/oko"]

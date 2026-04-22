@@ -134,7 +134,7 @@ fn main() {
         .build();
 
     println!(
-        "plex-pinger started — checking every {}s (alert after {} consecutive failures)",
+        "OKO started — checking every {}s (alert after {} consecutive failures)",
         config.interval_seconds, config.failure_threshold
     );
 

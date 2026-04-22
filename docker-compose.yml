@@ -1,15 +1,14 @@
 services:
-  plex-pinger:
+  oko:
     build: .
-    image: plex-pinger:latest
-    container_name: plex-pinger
+    image: oko:latest
+    container_name: oko
     restart: unless-stopped
     environment:
       - PUSHOVER_TOKEN=${PUSHOVER_TOKEN}
       - PUSHOVER_USER=${PUSHOVER_USER}
     command:
-      - --plex-url=http://192.168.1.169:32400/identity
-      - --qbit-url=http://192.168.1.169:8080
-      - --nas-url=tcp://192.168.1.139:445
+      - --plex-url=http://192.168.178.40:32400/identity
+      - --qbit-url=http://192.168.178.40:8080
       - --interval-seconds=15
-      # - --isp-ip=84.22.123.45
+      # - --isp-ip=1.2.3.4

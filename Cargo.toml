@@ -1,8 +1,8 @@
 [package]
-name = "plex-pinger"
+name = "oko"
 version = "0.1.0"
 edition = "2021"
-description = "Plex & qBittorrent monitor with Pushover notifications"
+description = "Service monitoring daemon — alerts when Plex, qBittorrent, NAS, or VPN goes down"
 
 [dependencies]
 ureq = { version = "2", features = ["json"] }

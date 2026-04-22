@@ -2,7 +2,7 @@ use clap::Parser;
 use std::net::IpAddr;
 
 #[derive(Parser, Debug)]
-#[clap(name = "plex-pinger", about = "Monitors services and sends Pushover alerts on failure")]
+#[clap(name = "oko", about = "Service monitoring daemon — sends Pushover alerts when services go down")]
 pub struct Config {
     #[clap(long, default_value = "", help = "Plex identity endpoint, e.g. http://192.168.1.10:32400/identity (empty = disabled)")]
     pub plex_url: String,
@@ -13,7 +13,7 @@ pub struct Config {
     #[clap(long, default_value = "", help = "NAS check URL — http(s)://... or tcp://host:port, e.g. tcp://192.168.1.20:445 (empty = disabled)")]
     pub nas_url: String,
 
-    #[clap(long, help = "Your ISP's public IPv4. When set, plex-pinger alerts if current public IP matches this (VPN leak). Leave unset to disable.")]
+    #[clap(long, help = "Your ISP's public IPv4. When set, OKO alerts if current public IP matches this (VPN leak). Leave unset to disable.")]
     pub isp_ip: Option<IpAddr>,
 
     #[clap(long, env = "PUSHOVER_TOKEN", help = "Pushover application token")]

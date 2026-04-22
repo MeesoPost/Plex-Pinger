@@ -1,6 +1,6 @@
-# plex-pinger
+# OKO
 
-Small Rust daemon that watches Plex, qBittorrent, and your NAS, and sends a Pushover notification when something goes down (or comes back up).
+Service monitoring daemon — watches Plex, qBittorrent, and your NAS, and sends Pushover notifications when something goes down (or comes back up).
 
 ## Quick start
 
@@ -22,7 +22,7 @@ Small Rust daemon that watches Plex, qBittorrent, and your NAS, and sends a Push
 4. Tail the logs:
 
    ```
-   docker compose logs -f plex-pinger
+   docker compose logs -f oko
    ```
 
 ## Config
@@ -51,7 +51,7 @@ Pushover credentials come from env vars (`PUSHOVER_TOKEN`, `PUSHOVER_USER`).
 
 ## VPN leak detection (optional)
 
-For machines running ProtonVPN natively (e.g. a Windows PC with the ProtonVPN desktop app), plex-pinger can alert you when traffic starts flowing outside the tunnel.
+For machines running ProtonVPN natively (e.g. a Windows PC with the ProtonVPN desktop app), OKO can alert you when traffic starts flowing outside the tunnel.
 
 **Setup:**
 
@@ -68,11 +68,11 @@ For machines running ProtonVPN natively (e.g. a Windows PC with the ProtonVPN de
 
 **How it works:**
 
-Each cycle plex-pinger queries your current public IP (via `api.ipify.org`, with `icanhazip.com` and `seeip.org` as fallbacks). If the result matches the IP you configured, traffic is no longer routing through ProtonVPN → 🔴 alert.
+Each cycle OKO queries your current public IP (via `api.ipify.org`, with `icanhazip.com` and `seeip.org` as fallbacks). If the result matches the IP you configured, traffic is no longer routing through ProtonVPN → 🔴 alert.
 
-If all three IP providers are unreachable for a cycle, plex-pinger marks the result as unknown and does not change state — a temporary network blip will not trigger a false "VPN down" alert.
+If all three IP providers are unreachable for a cycle, OKO marks the result as unknown and does not change state — a temporary network blip will not trigger a false "VPN down" alert.
 
-**Startup sanity check:** at launch, plex-pinger does one VPN check and warns if it looks like VPN is already off (i.e. your current IP already matches `--isp-ip`). This catches the "I pasted the wrong IP" mistake before it generates hours of alerts.
+**Startup sanity check:** at launch, OKO does one VPN check and warns if it looks like VPN is already off (i.e. your current IP already matches `--isp-ip`). This catches the "I pasted the wrong IP" mistake before it generates hours of alerts.
 
 **Maintenance:** your ISP's IP changes rarely (typical cable lease: 6+ months). When it does, you'll see constant "VPN is down" alerts — that's the signal to update the flag.
 
@@ -80,5 +80,5 @@ If all three IP providers are unreachable for a cycle, plex-pinger marks the res
 
 ```
 cargo build --release
-./target/release/plex-pinger --help
+./target/release/oko --help
 ```
